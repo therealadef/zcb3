@@ -67,7 +67,6 @@ enum Stage {
     SelectClickpack,
     Render,
     // AutoCutter,
-    Donate,
     Secret,
 }
 
@@ -304,7 +303,6 @@ impl eframe::App for App {
                 ui.selectable_value(&mut self.stage, Stage::SelectClickpack, "Clickpack");
                 ui.selectable_value(&mut self.stage, Stage::Render, "Render");
                 // ui.selectable_value(&mut self.stage, Stage::AutoCutter, "AutoCutter");
-                ui.selectable_value(&mut self.stage, Stage::Donate, "Donate");
                 if self.stage == Stage::Secret {
                     ui.selectable_value(&mut self.stage, Stage::Secret, "Secret");
                 }
@@ -389,7 +387,6 @@ impl eframe::App for App {
                     Stage::SelectClickpack => self.show_select_clickpack_stage(ctx, ui),
                     Stage::Render => self.show_render_stage(ctx, ui),
                     // Stage::AutoCutter => self.autocutter.show_ui(ctx, ui),
-                    Stage::Donate => self.show_pwease_donate_stage(ctx, ui),
                     Stage::Secret => self.show_secret_stage(ctx, ui),
                 };
             });
@@ -925,62 +922,6 @@ impl App {
         secret_modal.show_dialog();
     }
 
-    fn show_pwease_donate_stage(&mut self, _ctx: &egui::Context, ui: &mut egui::Ui) {
-        ui.heading("Donations");
-        ui.label("ZCB is completely free software, donations are appreciated :3");
-
-        ui.add_space(8.0);
-
-        egui::Grid::new("donate_stage_grid")
-            .num_columns(2)
-            .min_col_width(16.0)
-            .show(ui, |ui| {
-                ui.add(
-                    egui::Image::new(egui::include_image!("assets/kofi_logo.png")).max_width(20.0),
-                );
-                ui.hyperlink_to("Donate on Ko-fi", "https://ko-fi.com/zeozeozeo");
-                ui.end_row();
-
-                ui.add(
-                    egui::Image::new(egui::include_image!("assets/liberapay_logo.png"))
-                        .max_width(32.0),
-                );
-                ui.hyperlink_to("Donate on Liberapay", "https://liberapay.com/zeo");
-                ui.end_row();
-
-                ui.add(
-                    egui::Image::new(egui::include_image!("assets/donationalerts_logo.png"))
-                        .max_width(32.0),
-                );
-                ui.hyperlink_to(
-                    "Donate on DonationAlerts",
-                    "https://donationalerts.com/r/zeozeozeo",
-                );
-                ui.end_row();
-
-                ui.add(
-                    egui::Image::new(egui::include_image!("assets/boosty_logo.png"))
-                        .max_width(32.0),
-                );
-                ui.hyperlink_to("Donate on Boosty", "https://boosty.to/zeozeozeo/donate");
-                ui.end_row();
-
-                ui.add(
-                    egui::Image::new(egui::include_image!("assets/discord_logo.png"))
-                        .max_width(16.0),
-                );
-                ui.hyperlink_to("Join the Discord server", "https://discord.gg/b4kBQyXYZT");
-                ui.end_row();
-
-                ui.add(
-                    egui::Image::new(egui::include_image!("assets/guilded_logo.png"))
-                        .max_width(16.0),
-                );
-                ui.hyperlink_to("Join the Guilded server", "https://guilded.gg/clickbot");
-                ui.end_row();
-            });
-    }
-
     fn load_replay(&mut self, dialog: &Modal, file: &Path) -> Result<()> {
         let filename = file.file_name().unwrap().to_str().unwrap();
 
@@ -1118,23 +1059,12 @@ impl App {
             });
         });
 
-        help_text(ui, "Sort actions by time", |ui| {
-            ui.checkbox(&mut self.conf.sort_actions, "Sort actions");
-        });
-        help_text(
-            ui,
-            "Whether to start rendering from the first action after the last death\nOnly applies to GDReplayFormat 2 and Silicate 2",
-            |ui| {
-                ui.checkbox(&mut self.conf.discard_deaths, "Discard deaths");
-            },
-        );
-        help_text(
-            ui,
-            "Whether to swap player 1 and player 2\nFixes a bug in xdBot which assumes player 2 to be player 1",
-            |ui| {
-                ui.checkbox(&mut self.conf.swap_players, "Swap players (xdBot)");
-            },
-        );
+        ui.checkbox(&mut self.conf.sort_actions, "Sort actions");
+
+        ui.checkbox(&mut self.conf.discard_deaths, "Discard deaths");
+
+        ui.checkbox(&mut self.conf.swap_players, "Swap players");
+
         ui.separator();
 
         ui.horizontal(|ui| {
@@ -1873,15 +1803,8 @@ impl App {
     fn show_render_stage(&mut self, ctx: &egui::Context, ui: &mut egui::Ui) {
         ui.heading("Render");
 
-        ui.label("Select the output audio file. In the dialog, choose an arbitrary name for the new file and click 'Save'.");
-
         let mut dialog = Modal::new(ctx, "render_stage_dialog");
 
-        ui.horizontal(|ui| {
-            help_text(
-                ui,
-                "Select the output .wav file.\nYou have to click 'Render' to render the output",
-                |ui| {
                     if ui.button("Select output file").clicked() {
                         if let Some(path) = FileDialog::new()
                             .add_filter("Supported audio files", &["wav"])
@@ -1898,15 +1821,13 @@ impl App {
                                 .open();
                         }
                     }
-                },
-            );
+
             if let Some(output) = &self.output {
                 ui.label(format!(
                     "Selected output file: {}",
                     output.file_name().unwrap().to_str().unwrap()
                 ));
             }
-        });
 
         ui.separator();
 
